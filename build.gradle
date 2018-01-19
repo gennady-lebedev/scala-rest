@@ -1,0 +1,61 @@
+group 'com.company'
+version '0.1'
+
+apply plugin: 'java'
+apply plugin: 'scala'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.11.12'
+    compile 'com.typesafe.akka:akka-actor_2.11:2.5.4'
+    compile 'com.typesafe.akka:akka-slf4j_2.11:2.5.4'
+    compile 'com.typesafe.akka:akka-stream_2.11:2.5.4'
+
+    compile 'com.typesafe.akka:akka-http_2.11:10.0.9'
+    compile 'com.typesafe.akka:akka-http-spray-json_2.11:10.0.9'
+
+    compile 'io.circe:circe-core_2.11:0.9.1'
+    compile 'io.circe:circe-generic_2.11:0.9.1'
+    compile 'de.heikoseeberger:akka-http-circe_2.11:1.19.0'
+
+//    compile 'org.apache.spark:spark-core_2.11:2.2.0'
+//    compile 'org.apache.spark:spark-sql_2.11:2.2.0'
+
+    compile 'org.scalikejdbc:scalikejdbc_2.11:3.0.1'
+
+    compile 'mysql:mysql-connector-java:5.1.45'
+
+    compile 'com.typesafe.scala-logging:scala-logging_2.11:3.7.2'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.13'
+
+    testCompile 'org.scalatest:scalatest_2.11:3.0.4'
+}
+
+//configurations.all {
+//    exclude group: "org.slf4j", module: "slf4j-log4j12"
+//    exclude group: "log4j", module: "log4j"
+//}
+
+task run(type: JavaExec, dependsOn: classes) {
+    classpath sourceSets.main.runtimeClasspath
+    main = 'com.company.rest.Main'
+    standardInput = System.in
+}
+
+task scalaTest(dependsOn: ['testClasses'], type: JavaExec) {
+    main = 'org.scalatest.tools.Runner'
+    args = ['-R', 'build/classes/scala/test', '-o']
+    classpath sourceSets.test.runtimeClasspath
+}
+
+
+test.dependsOn scalaTest

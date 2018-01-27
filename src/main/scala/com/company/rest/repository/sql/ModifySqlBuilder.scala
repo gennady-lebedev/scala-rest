@@ -7,17 +7,23 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.reflect.runtime.universe._
 
 object ModifySqlBuilder {
-  def apply[R <: Product : TypeTag](id: Long): ModifySqlBuilder[R] = new ModifySqlBuilder[R](Some(id))
-  def apply[R <: Product : TypeTag](): ModifySqlBuilder[R] = new ModifySqlBuilder[R](None)
+  def apply[R <: Product : TypeTag]: ModifySqlBuilder[R] = new ModifySqlBuilder[R]
 }
 
-class ModifySqlBuilder[R <: Product : TypeTag](id: Option[Long] = None) extends LazyLogging {
+class ModifySqlBuilder[R <: Product : TypeTag] extends LazyLogging {
   private lazy val universeMirror = runtimeMirror(getClass.getClassLoader)
   private lazy val companion = universeMirror.reflectModule(typeOf[R].typeSymbol.companion.asModule).instance.asInstanceOf[MetaCompanion[R]].meta
 
-  def select(): BoundQuery = {
+  def select(id: Long): BoundQuery = {
     val key = companion.columns.zipWithIndex.filter(c => companion.keyColumn.contains(c._1)).head
     val q = BoundQuery(s"SELECT * FROM ${companion.table} WHERE ${key._1}={${key._1}}", key._1, id)
+    logger.debug("Select query generated: {} with bindings {}", q.sql, q.bindings.map(b => b.name + ":" + b.value).mkString(", "))
+    q
+  }
+
+  def select(item: R): BoundQuery = {
+    val key = companion.columns.zipWithIndex.filter(c => companion.keyColumn.contains(c._1)).head
+    val q = BoundQuery(s"SELECT * FROM ${companion.table} WHERE ${key._1}={${key._1}}", key._1, item.productElement(key._2))
     logger.debug("Select query generated: {} with bindings {}", q.sql, q.bindings.map(b => b.name + ":" + b.value).mkString(", "))
     q
   }
@@ -56,9 +62,9 @@ class ModifySqlBuilder[R <: Product : TypeTag](id: Option[Long] = None) extends 
     q
   }
 
-  def delete(): BoundQuery = {
+  def delete(item: R): BoundQuery = {
     val key = companion.columns.zipWithIndex.filter(c => companion.keyColumn.contains(c._1)).head
-    val q = BoundQuery(s"DELETE FROM ${companion.table} WHERE ${key._1} = {key}", "key", id.get)
+    val q = BoundQuery(s"DELETE FROM ${companion.table} WHERE ${key._1} = {key}", "key", item.productElement(key._2))
     logger.debug("Delete query generated: {} with bindings {}", q.sql, q.bindings.map(b => b.name + ":" + b.value).mkString(", "))
     q
   }

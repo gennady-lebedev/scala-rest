@@ -13,7 +13,7 @@ trait RoRepository[P <: Product, K <: AnyVal] extends Repository[P, K] {
 
 trait WoRepository[P <: Product, K <: AnyVal] extends Repository[P, K] {
   def create(draft: P): P
-  def update(entity: P): Unit
+  def update(entity: P): P
   def delete(entity: P): Unit
 }
 

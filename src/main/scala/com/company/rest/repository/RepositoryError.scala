@@ -21,6 +21,9 @@ class InvalidUpdateKey(oldValue: Any, newValue: Any)
 class NothingToUpdate
   extends RepositoryError(3, s"Nothing to update", StatusCodes.NoContent)
 
+class ConflictOnDelete
+  extends RepositoryError(4, s"Entity was changed", StatusCodes.Conflict)
+
 // TODO make internal errors in separate file
 class UnexpectedMultipleRows
   extends RepositoryError(4, "Expected single row, get multiple")

@@ -27,13 +27,21 @@ class RootRouter(implicit executionContext: ExecutionContext) extends JsonUtil w
               case Some(found) => complete(StatusCodes.OK, found)
               case None => complete(StatusCodes.NotFound)
             }
+          } ~ put {
+            entity(as[Item]) { item =>
+              complete(StatusCodes.OK, AppContext.itemsRepository.update(item))
+            }
+          } ~ delete {
+            entity(as[Item]) { item =>
+              complete(StatusCodes.NoContent, AppContext.itemsRepository.delete(item))
+            }
           }
         } ~ path("item") {
           get {
             complete(StatusCodes.OK, AppContext.itemsRepository.find(new Query[Item]))
           } ~ post {
-            entity(as[Item]) {draft =>
-              complete(StatusCodes.OK, AppContext.itemsRepository.create(draft))
+            entity(as[Item]) { draft =>
+              complete(StatusCodes.Created, AppContext.itemsRepository.create(draft))
             }
           }
         }

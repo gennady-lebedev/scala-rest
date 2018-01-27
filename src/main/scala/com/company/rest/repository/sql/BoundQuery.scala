@@ -25,6 +25,8 @@ case class BoundQuery(sql: String, bindings: Seq[Binding]) {
   def single[T](f: WrappedResultSet => T)(implicit session: DBSession): Option[T] = toScalike.map(f).single().apply()
 
   def insert[T](draft: T)(implicit session: DBSession): Long = toScalike.updateAndReturnGeneratedKey("id").apply()
+
+  def execute(implicit session: DBSession): Unit = toScalike.execute().apply()
 }
 
 object BoundQuery {

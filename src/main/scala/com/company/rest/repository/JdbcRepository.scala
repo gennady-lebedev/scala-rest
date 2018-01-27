@@ -34,7 +34,7 @@ class JdbcRepository[T <: Product : TypeTag](implicit session: DBSession = AutoS
   }
 
   override def findById(id: Long): Option[T] =
-    ModifySqlBuilder[T](id).select().single(companion.parse)
+    ModifySqlBuilder[T].select(id).single(companion.parse)
 
   override def get(id: Long): T = findById(id) match {
     case Some(v) => v
@@ -42,17 +42,27 @@ class JdbcRepository[T <: Product : TypeTag](implicit session: DBSession = AutoS
   }
 
   override def create(draft: T): T = {
-    val id = ModifySqlBuilder[T]()
+    val id = ModifySqlBuilder[T]
       .insert(draft).insert(draft)
     get(id)
   }
 
 
-  override def update(entity: T): Unit = {
-    // TODO
+  override def update(entity: T): T = {
+    ModifySqlBuilder[T].select(entity).single(companion.parse) match {
+      case Some(old) if old == entity => throw new NothingToUpdate
+      case Some(old) =>
+        ModifySqlBuilder[T].update(old, entity).execute
+        ModifySqlBuilder[T].select(entity).single(companion.parse).get
+      case None => throw new RepositoryItemNotFound(entity)
+    }
   }
 
   override def delete(entity: T): Unit = {
-    // TODO
+    ModifySqlBuilder[T].select(entity).single(companion.parse) match {
+      case Some(old) if old == entity => ModifySqlBuilder[T].delete(entity).execute
+      case Some(old) => throw new ConflictOnDelete
+      case None => throw new RepositoryItemNotFound(entity)
+    }
   }
 }

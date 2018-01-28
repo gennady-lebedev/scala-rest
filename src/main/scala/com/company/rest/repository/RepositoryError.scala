@@ -7,7 +7,11 @@ abstract class RepositoryError
   val responseCode: Int,
   val message: String,
   val httpCode: StatusCode = StatusCodes.InternalServerError
-) extends RuntimeException(message)
+) extends RuntimeException(message) {
+  def response: ErrorResponse = ErrorResponse(responseCode, message)
+}
+
+case class ErrorResponse(code: Int, message: String)
 
 class RepositoryItemNotFound(id: Any)
   extends RepositoryError(0, s"Element #$id not found", StatusCodes.NotFound)
